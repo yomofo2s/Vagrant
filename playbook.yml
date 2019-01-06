@@ -1,0 +1,64 @@
+---
+   
+- name: Docker-ce
+  hosts: all
+  become: true
+  tasks:
+    - name: Install docker packages
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      with_items:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+    - name: add docker key
+      apt_key: 
+        id: 0EBFCD88
+        url: https://download.docker.com/linux/ubuntu/gpg 
+    - name: add repository
+      apt_repository: 
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+    - name: Update packages
+      apt:
+        update_cache: yes
+    - name: Install docker
+      apt:
+        name: docker-ce
+        state: present
+        update_cache: yes
+    - name: Check installed docker version
+      command: docker --version
+      register: docversion
+    - name: Display docker version     
+      debug:
+        msg: "Installed version is {{ docversion.stdout }}"
+    - name: Create docker group
+      group:
+        name: "docker"
+        state: present
+    - name: Add vagrant user to docker group
+      user:
+        name: "vagrant"
+        group: "docker"
+        append: yes
+    - name: Install Docker Compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.23.1/docker-compose-Linux-x86_64
+        dest: "/usr/local/bin/docker-compose"
+        mode: 0755
+   # - name: Install Docker Compose 
+    #  apt:
+     #   name: docker-compose
+      #  state: present
+       # update_cache: yes
+    - name: Check installed docker compose version
+      command: docker-compose --version
+      register: doccomversion
+    - name: Display docker compose version       
+      debug:
+        msg: "Installed version is {{ doccomversion.stdout }}"
+
+

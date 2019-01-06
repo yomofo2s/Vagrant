@@ -1,0 +1,34 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+VAGRANT_BOXNAME = "ubuntu/xenial64"
+
+Vagrant.configure(2) do |config|
+
+  config.vm.box = VAGRANT_BOXNAME
+  config.vm.hostname = "dockhost"
+
+  config.vm.network "private_network",
+    ip: "172.16.0.100",
+    netmask: "255.255.255.0"
+
+  config.vm.provider "virtualbox" do |vb|
+    # Amount of memory on the VM:
+    vb.memory = "1024"
+    # Specify the number of CPU's
+    vb.cpus = 2
+  end
+
+  config.ssh.insert_key = false
+  config.ssh.private_key_path = ['/.vagrant.d/insecure_private_key', '/.ssh/id_rsa']
+  config.vm.provision "file", source: "/.ssh/id_rsa.pub", destination: "/.ssh/authorized_keys"
+
+  #Sheet 7 - Task 3
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "provision/ansible/docker-playbook.yml"
+    ansible.inventory_path = "provision/ansible/hosts.yml"
+    ansible.limit = "dockhost"
+  end
+end
+
